@@ -10,13 +10,24 @@
 // Outside the grader's container, MAKEFUN_BOT_DIR and MAKEFUN_OUTPUT_DIR stand in for /bot and /output:
 //   mkdir -p out && MAKEFUN_BOT_DIR=. MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { copyFileSync, mkdirSync } from 'node:fs';
+// gta6-meme-x-01 entry for @kaduanganu: the meme itself is the post on X
+// ("I quit my job, leaving my family, and fake my own death. Now I'm a
+// citizen of Leonida."), and this program only hands the post's address in
+// POST.json to the grader, unchanged. It refuses to copy a POST.json with
+// no X post address in it, so a placeholder can never be submitted by
+// accident.
+import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const BOT_DIR = process.env.MAKEFUN_BOT_DIR ?? '/bot';
 const OUTPUT_DIR = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
 mkdirSync(OUTPUT_DIR, { recursive: true });
+const post = JSON.parse(readFileSync(join(BOT_DIR, 'POST.json'), 'utf8'));
+if (typeof post.url !== 'string' || !post.url.startsWith('https://x.com/')) {
+  console.error(`POST.json has no X post address in it: ${JSON.stringify(post)}`);
+  process.exit(1);
+}
 try {
   copyFileSync(join(BOT_DIR, 'POST.json'), join(OUTPUT_DIR, 'POST.json'));
 } catch (err) {
